@@ -1,0 +1,49 @@
+{
+    "theme": "dark",
+    "menu_alias": "USBFREEDOM Toolkit",
+    "menu_timeout": 30,
+    "auto_install": 0,
+    "default_image": 0,
+    "menu_entries": [
+        {
+            "image": "/images/pentest-kit.img",
+            "title": "Penetration Testing Toolkit (Kali-based)",
+            "description": "Offensive security toolkit with Metasploit, Nmap, BloodHound, and more"
+        },
+        {
+            "image": "/images/malware-analysis.img",
+            "title": "Malware Analysis Lab (REMnux)",
+            "description": "Reverse engineering environment with IDA, CAPE, and Ghidra"
+        },
+        {
+            "image": "/images/data-science.img",
+            "title": "Data Science Workbench (Ubuntu LTS)",
+            "description": "Python/R analytics environment with Jupyter, DuckDB, and Spark"
+        },
+        {
+            "image": "/images/mobile-dev.img",
+            "title": "Mobile Development SDK (Manjaro ARM)",
+            "description": "Flutter and Android development environment"
+        },
+        {
+            "image": "/images/sdr-comm.img",
+            "title": "SDR Communications Kit (Kali-SDR)",
+            "description": "Software-defined radio toolkit with GNURadio and RTL-SDR"
+        },
+        {
+            "image": "/images/firmware-reverse.img",
+            "title": "Firmware Analysis Toolkit (Debian)",
+            "description": "Firmware reversing tools including Ghidra and binwalk"
+        },
+        {
+            "image": "/images/ics-scada.img",
+            "title": "ICS/SCADA Security Suite (Kali ICS)",
+            "description": "Industrial control systems security toolkit"
+        },
+        {
+            "image": "/images/os-installer.img",
+            "title": "OS Installation Media",
+            "description": "Multi-boot installer collection"
+        }
+    ]
+}
