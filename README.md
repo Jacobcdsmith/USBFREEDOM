@@ -1,50 +1,42 @@
 # USBFREEDOM
 
-Collection of preloaded USB toolkit images for various cybersecurity, development, and system administration tasks.
+A collection of preloaded USB toolkit images designed for various tasks in cybersecurity, development, and system administration.
 
 ## Available Toolkits
 
 1. **Penetration Testing Kit** (Kali-based)
-   - Offensive security toolkit with Metasploit, Nmap, BloodHound, and ffuf
-   - Features CTF-style unlock portal
+   - Offensive security tools like Metasploit, Nmap, BloodHound, and ffuf
+   - Includes a CTF-style unlock portal
 
 2. **Malware Analysis Lab** (REMnux-based)
-   - Includes IDA Free, CAPE sandbox, and custom Ghidra scripts
-   - Auto-starts CAPE web UI via systemd
+   - Equipped with IDA Free, CAPE sandbox, and custom Ghidra scripts
+   - Automatically starts CAPE web UI using systemd
 
 3. **Data Science Workbench** (Ubuntu LTS)
-   - Full conda environment with JupyterLab
-   - Includes DuckDB and Apache Spark
-   - Pre-loaded example notebooks and datasets
+   - Features a full conda environment with JupyterLab
+   - Includes DuckDB, Apache Spark, and preloaded example notebooks and datasets
 
 4. **Mobile Development SDK** (Manjaro ARM)
-   - Complete Flutter and Android SDK setup
-   - VS Code devcontainer configuration
-   - Preconfigured udev rules for Android devices
+   - Fully configured Flutter and Android SDK setup
+   - VS Code devcontainer configuration included
+   - Predefined udev rules for Android devices
 
 5. **SDR Communications Kit** (Kali-SDR)
-   - GNURadio, gqrx, SigDigger
-   - HackRF and RTL-SDR tools
-   - Example flow-graphs included
+   - Comes with GNURadio, gqrx, SigDigger
+   - Includes HackRF and RTL-SDR tools along with example flow-graphs
 
 6. **Firmware Analysis Toolkit** (Debian)
-   - Ghidra, binwalk, Firmwalker
-   - JFFS2 extraction tools
-   - OpenOCD configuration
-   - Auto flash extraction script
+   - Tools like Ghidra, binwalk, Firmwalker
+   - JFFS2 extraction utilities
+   - OpenOCD configuration and an automated flash extraction script
 
 7. **ICS/SCADA Security Suite** (Kali ICS)
-   - Modbus/TCP fuzzing tools
-   - Wireshark with PLC plugins
-   - PLCSim for testing
-   - Isolated lab environment
+   - Modbus/TCP fuzzing tools, Wireshark with PLC plugins
+   - PLCSim for testing in an isolated lab environment
 
 8. **OS Installation Media**
    - Ventoy-based multiboot setup
-   - Windows 10/11 Evaluation
-   - Server OSes (Windows Server, ESXi, Proxmox)
-   - Network appliances (TrueNAS, pfSense)
-   - Linux distributions
+   - Includes Windows 10/11 Evaluation, server OSes (Windows Server, ESXi, Proxmox), network appliances (TrueNAS, pfSense), and Linux distributions
 
 ## Building Images
 
@@ -58,7 +50,7 @@ git push origin main
 
 ## Flashing Images to USB
 
-After building an image you can write it to a USB drive with the helper script:
+Once an image is built, use the helper script to write it to a USB drive:
 
 ```bash
 sudo ./flash_usb.sh <image_file> <device>
@@ -70,32 +62,4 @@ Example:
 sudo ./flash_usb.sh pentest-kit.img /dev/sdX
 ```
 
-Replace `/dev/sdX` with your target device (e.g., `/dev/sdb`). The script will
-prompt for confirmation before overwriting the device.
-
-## Project Structure
-
-```
-core/
-  ├── base_iso/     # Base distribution ISOs
-  └── overlay/      # Common configuration files
-build.sh            # ISO patching script
-ventoy.json        # Boot menu configuration
-.github/workflows/  # CI/CD configuration
-```
-
-## CI/CD Pipeline
-
-- GitHub Actions automatically builds all toolkit images
-- Tagged releases are uploaded to S3
-- Checksum verification included
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Submit a Pull Request
-
-## License
-
-See LICENSE file for details.
+Replace `/dev/sdX` with your target drive.
