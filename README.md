@@ -56,6 +56,23 @@ Collection of preloaded USB toolkit images for various cybersecurity, developmen
 git push origin main
 ```
 
+## Flashing Images to USB
+
+After building an image you can write it to a USB drive with the helper script:
+
+```bash
+sudo ./flash_usb.sh <image_file> <device>
+```
+
+Example:
+
+```bash
+sudo ./flash_usb.sh pentest-kit.img /dev/sdX
+```
+
+Replace `/dev/sdX` with your target device (e.g., `/dev/sdb`). The script will
+prompt for confirmation before overwriting the device.
+
 ## Project Structure
 
 ```
