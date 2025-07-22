@@ -47,6 +47,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y p7zip-full genisoimage
 
+    - name: Prepare base_iso directory
+      run: |
+        mkdir -p base_iso
+
     - name: Download base ISO
       run: |
         wget -O base_iso/${{ matrix.toolkit.base_iso }} ${{ matrix.toolkit.iso_url }}

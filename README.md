@@ -48,6 +48,10 @@ Collection of preloaded USB toolkit images for various cybersecurity, developmen
 
 ## Building Images
 
+Before running any build commands, ensure a `base_iso/` directory is present to
+hold the original distribution ISOs. You can create this folder manually with
+`mkdir -p base_iso` or run a script that prepares it for you.
+
 ```bash
 # Build a single image
 ./build.sh base_iso/kali-linux-rolling.iso pentest-kit.img
