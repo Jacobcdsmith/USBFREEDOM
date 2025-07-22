@@ -1,0 +1,35 @@
+# Build artifacts
+*.img
+*.sha256
+
+# Temporary directories and files
+tmp/
+temp/
+*.tmp
+*.log
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.nfs*
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Editor backups
+*.swp
+*.swo
+
+# Build directories
+build/
+dist/
+
