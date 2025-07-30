@@ -22,59 +22,106 @@ menu_items=(
   "Q) Quit"
 )
 
-clear
-echo -e "\e[1;36m$ascii_art\e[0m"
-echo "Welcome to USBFREEDOM Toolkit"
-echo "Select an option to begin:"
-echo
+show_menu() {
+    clear
+    echo -e "\e[1;36m$ascii_art\e[0m"
+    echo "Welcome to USBFREEDOM Toolkit"
+    echo "Select an option to begin:"
+    echo
+    
+    for item in "${menu_items[@]}"; do
+      echo "  $item"
+    done
+    echo
+}
 
-for item in "${menu_items[@]}"; do
-  echo "  $item"
+run_toolkit() {
+    local choice="$1"
+    
+    case "$choice" in
+      1)
+        echo "Launching Penetration Testing Kit..."
+        if [ -f /opt/toolbox/pentest_install.sh ]; then
+            bash /opt/toolbox/pentest_install.sh
+        else
+            echo "Error: Pentest toolkit not found"
+        fi
+        ;;
+      2)
+        echo "Launching Malware Analysis Lab..."
+        if [ -f /opt/toolbox/malware_install.sh ]; then
+            bash /opt/toolbox/malware_install.sh
+        else
+            echo "Error: Malware analysis toolkit not found"
+        fi
+        ;;
+      3)
+        echo "Launching Data Science Workbench..."
+        if [ -f /opt/toolbox/datasci_install.sh ]; then
+            bash /opt/toolbox/datasci_install.sh
+        else
+            echo "Error: Data science toolkit not found"
+        fi
+        ;;
+      4)
+        echo "Launching Mobile Development SDK..."
+        if [ -f /opt/toolbox/mobiledev_install.sh ]; then
+            bash /opt/toolbox/mobiledev_install.sh
+        else
+            echo "Error: Mobile development toolkit not found"
+        fi
+        ;;
+      5)
+        echo "Launching SDR Communications Kit..."
+        if [ -f /opt/toolbox/sdr_install.sh ]; then
+            bash /opt/toolbox/sdr_install.sh
+        else
+            echo "Error: SDR toolkit not found"
+        fi
+        ;;
+      6)
+        echo "Launching Firmware Analysis Toolkit..."
+        if [ -f /opt/toolbox/firmware_install.sh ]; then
+            bash /opt/toolbox/firmware_install.sh
+        else
+            echo "Error: Firmware analysis toolkit not found"
+        fi
+        ;;
+      7)
+        echo "Launching ICS/SCADA Security Suite..."
+        if [ -f /opt/toolbox/ics_install.sh ]; then
+            bash /opt/toolbox/ics_install.sh
+        else
+            echo "Error: ICS/SCADA toolkit not found"
+        fi
+        ;;
+      8)
+        echo "Launching OS Installation Media..."
+        if [ -f /opt/toolbox/osinstaller.sh ]; then
+            bash /opt/toolbox/osinstaller.sh
+        else
+            echo "Error: OS installer not found"
+        fi
+        ;;
+      [Qq])
+        echo "Goodbye!"
+        exit 0
+        ;;
+      *)
+        echo "Invalid selection."
+        sleep 2
+        return 1
+        ;;
+    esac
+}
+
+# Main loop
+while true; do
+    show_menu
+    read -p "Enter your choice: " choice
+    
+    if run_toolkit "$choice"; then
+        echo
+        read -p "Press Enter to return to menu..."
+    fi
 done
-
-echo
-read -p "Enter your choice: " choice
-
-case "$choice" in
-  1)
-    echo "Launching Penetration Testing Kit..."
-    bash /opt/toolbox/pentest_install.sh
-    ;;
-  2)
-    echo "Launching Malware Analysis Lab..."
-    bash /opt/toolbox/malware_install.sh
-    ;;
-  3)
-    echo "Launching Data Science Workbench..."
-    bash /opt/toolbox/datasci_install.sh
-    ;;
-  4)
-    echo "Launching Mobile Development SDK..."
-    bash /opt/toolbox/mobiledev_install.sh
-    ;;
-  5)
-    echo "Launching SDR Communications Kit..."
-    bash /opt/toolbox/sdr_install.sh
-    ;;
-  6)
-    echo "Launching Firmware Analysis Toolkit..."
-    bash /opt/toolbox/firmware_install.sh
-    ;;
-  7)
-    echo "Launching ICS/SCADA Security Suite..."
-    bash /opt/toolbox/ics_install.sh
-    ;;
-  8)
-    echo "Launching OS Installation Media..."
-    bash /opt/toolbox/osinstaller.sh
-    ;;
-  [Qq])
-    echo "Goodbye!"
-    exit 0
-    ;;
-  *)
-    echo "Invalid selection."
-    sleep 2
-    exec "$0"
-    ;;
-esac
