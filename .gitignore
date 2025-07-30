@@ -2,6 +2,12 @@
 *.img
 *.sha256
 
+# Base ISO files (too large for repository)
+base_iso/*.iso
+base_iso/*.img
+base_iso/*.ova
+base_iso/*.tar.gz
+
 # Temporary directories and files
 tmp/
 temp/

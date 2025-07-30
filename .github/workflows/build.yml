@@ -18,26 +18,26 @@ jobs:
             base_iso: kali-linux-rolling.iso
             iso_url: https://cdimage.kali.org/kali-latest/kali-linux-rolling-live-amd64.iso
           - name: malware-analysis
-            base_iso: remnux-2025.iso
-            iso_url: https://remnux.org/latest.iso
+            base_iso: remnux-focal.ova
+            iso_url: https://docs.remnux.org/distro/get#download-virtual-appliance
           - name: data-science
             base_iso: ubuntu-24.04-live-server.iso
             iso_url: https://releases.ubuntu.com/24.04/ubuntu-24.04-live-server-amd64.iso
           - name: mobile-dev
-            base_iso: manjaro-arm-minimal.img
-            iso_url: https://manjaro.org/downloads/arm/minimal/
+            base_iso: manjaro-xfce-minimal.iso
+            iso_url: https://download.manjaro.org/xfce/21.3.7/manjaro-xfce-21.3.7-minimal-220618-linux515.iso
           - name: sdr-comm
-            base_iso: kali-linux-rolling-sdr.iso
+            base_iso: kali-linux-rolling.iso
             iso_url: https://cdimage.kali.org/kali-latest/kali-linux-rolling-live-amd64.iso
           - name: firmware-reverse
             base_iso: debian-12-netinst.iso
-            iso_url: https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.0.0-amd64-netinst.iso
+            iso_url: https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.8.0-amd64-netinst.iso
           - name: ics-scada
-            base_iso: kali-linux-rolling-ics.iso
+            base_iso: kali-linux-rolling.iso
             iso_url: https://cdimage.kali.org/kali-latest/kali-linux-rolling-live-amd64.iso
           - name: os-installer
-            base_iso: ventoy-baseline.iso
-            iso_url: https://github.com/ventoy/Ventoy/releases/latest/download/ventoy-latest.iso
+            base_iso: ventoy.tar.gz
+            iso_url: https://github.com/ventoy/Ventoy/releases/latest/download/ventoy-1.0.99-linux.tar.gz
 
     steps:
     - uses: actions/checkout@v3
@@ -62,6 +62,7 @@ jobs:
 
     - name: Download base ISO
       run: |
+        mkdir -p base_iso
         wget -O base_iso/${{ matrix.toolkit.base_iso }} ${{ matrix.toolkit.iso_url }}
 
     - name: Build USB image

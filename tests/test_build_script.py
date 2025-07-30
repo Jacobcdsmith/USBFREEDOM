@@ -51,8 +51,10 @@ def test_two_arguments(tmp_path):
     iso.write_text('iso')
     output_img = tmp_path / 'out.img'
 
-    # Link expected overlay path
-    overlay_link = tmp_path / 'overlay'
+    # Create expected core/overlay path
+    core_dir = tmp_path / 'core'
+    core_dir.mkdir()
+    overlay_link = core_dir / 'overlay'
     overlay_link.symlink_to(Path(__file__).resolve().parent.parent / 'core' / 'overlay')
 
     result = run_script([str(iso), str(output_img)], env=env, cwd=tmp_path)
