@@ -1,0 +1,48 @@
+toolkits:
+  - name: "Penetration Testing Kit"
+    id: "pentest"
+    base_iso: "kali-linux-rolling.iso"
+    description: "Offensive security tools like Metasploit, Nmap, BloodHound, and ffuf"
+    install_script: "core/overlay/opt/toolbox/pentest_install.sh"
+  
+  - name: "Malware Analysis Lab"
+    id: "malware"
+    base_iso: "remnux-cli.iso"
+    description: "Equipped with IDA Free, CAPE sandbox, and custom Ghidra scripts"
+    install_script: "core/overlay/opt/toolbox/malware_install.sh"
+
+  - name: "Data Science Workbench"
+    id: "datasci"
+    base_iso: "ubuntu-22.04-desktop-amd64.iso"
+    description: "Features a full conda environment with JupyterLab"
+    install_script: "core/overlay/opt/toolbox/datasci_install.sh"
+
+  - name: "Mobile Development SDK"
+    id: "mobiledev"
+    base_iso: "manjaro-arm-installer.iso"
+    description: "Fully configured Flutter and Android SDK setup"
+    install_script: "core/overlay/opt/toolbox/mobiledev_install.sh"
+
+  - name: "SDR Communications Kit"
+    id: "sdr"
+    base_iso: "kali-linux-rolling.iso"
+    description: "Comes with GNURadio, gqrx, SigDigger"
+    install_script: "core/overlay/opt/toolbox/sdr_install.sh"
+
+  - name: "Firmware Analysis Toolkit"
+    id: "firmware"
+    base_iso: "debian-11.0.0-amd64-netinst.iso"
+    description: "Tools like Ghidra, binwalk, Firmwalker"
+    install_script: "core/overlay/opt/toolbox/firmware_install.sh"
+
+  - name: "ICS/SCADA Security Suite"
+    id: "ics"
+    base_iso: "kali-linux-rolling.iso"
+    description: "Modbus/TCP fuzzing tools, Wireshark with PLC plugins"
+    install_script: "core/overlay/opt/toolbox/ics_install.sh"
+
+  - name: "OS Installation Media"
+    id: "osinstall"
+    base_iso: "ventoy.iso"
+    description: "Ventoy-based multiboot setup"
+    install_script: "core/overlay/opt/toolbox/osinstaller.sh"

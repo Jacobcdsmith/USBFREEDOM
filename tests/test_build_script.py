@@ -1,60 +1,88 @@
+import unittest
+import shutil
+import tempfile
 import os
 from pathlib import Path
-import subprocess
-import sys
+from unittest.mock import MagicMock, patch
+from usbfreedom.core import Toolkit, Builder, Flasher
 
-SCRIPT_PATH = (Path(__file__).resolve().parent.parent / 'build.sh').as_posix()
+class TestUSBFreedom(unittest.TestCase):
+    def setUp(self):
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_path = Path(self.tmp_dir.name)
+        
+        self.mock_toolkit = Toolkit(
+            name="Test Kit",
+            id="test",
+            base_iso="test.iso",
+            description="Test Description",
+            install_script="install.sh"
+        )
 
+    def tearDown(self):
+        self.tmp_dir.cleanup()
 
-def run_script(args, env=None, cwd=None):
-    # Execute the script via bash to avoid relying on executable permissions
-    return subprocess.run(['bash', SCRIPT_PATH, *args], capture_output=True, text=True, env=env, cwd=cwd)
+    @patch('usbfreedom.core.shutil.copytree')
+    @patch('usbfreedom.core.run_command')
+    def test_builder(self, mock_copytree, mock_run_command):
+        # Top patch: copytree -> passed first
+        # Bottom patch: run_command -> passed second
+        
+        # Setup
+        output_path = self.tmp_path / "output.img"
+        builder = Builder(self.mock_toolkit, output_path)
+        
+        # Mock project root to point to tmp_path
+        with patch('usbfreedom.core.get_project_root', return_value=self.tmp_path):
+            # Create dummy ISO and overlay
+            (self.tmp_path / 'base_iso').mkdir()
+            (self.tmp_path / 'base_iso' / 'test.iso').touch()
+            (self.tmp_path / 'core' / 'overlay').mkdir(parents=True)
 
+            # Run build
+            builder.build()
 
-def test_no_arguments():
-    result = run_script([])
-    assert result.returncode == 1
-    assert 'Usage' in result.stdout or 'Usage' in result.stderr
+        # Verify
+        # run_command called twice (7z, mkisofs)
+        self.assertEqual(mock_run_command.call_count, 2) 
+        # copytree called once
+        self.assertTrue(mock_copytree.called)
 
+    @patch('usbfreedom.core.run_command')
+    @patch('usbfreedom.core.subprocess.run')
+    def test_flasher(self, mock_run_command, mock_subprocess_run):
+        # Top patch: run_command -> passed first
+        # Bottom patch: subprocess.run -> passed second
+        
+        # Setup
+        image_path = self.tmp_path / "test.img"
+        image_path.touch()
+        device_path = self.tmp_path / "dev" / "sdb" # Fake device path
+        (self.tmp_path / "dev").mkdir(parents=True, exist_ok=True)
+        
+        # Mock os.path.exists for device check
+        with patch('os.path.exists', return_value=True):
+            flasher = Flasher(image_path, str(device_path))
+            flasher.flash()
 
-def test_one_argument():
-    result = run_script(['onlyone'])
-    assert result.returncode == 1
-    assert 'Usage' in result.stdout or 'Usage' in result.stderr
+        # Verify
+        self.assertTrue(mock_subprocess_run.called) # dd
+        
+    def test_toolkit_load(self):
+        config_file = self.tmp_path / "toolkits.yaml"
+        with open(config_file, 'w') as f:
+            f.write("""
+toolkits:
+  - name: "Test Kit"
+    id: "test"
+    base_iso: "test.iso"
+    description: "Test Description"
+    install_script: "install.sh"
+""")
+        
+        toolkits = Toolkit.load_from_yaml(config_file)
+        self.assertEqual(len(toolkits), 1)
+        self.assertEqual(toolkits[0].id, "test")
 
-
-def test_two_arguments(tmp_path):
-    # Create stubs for 7z and mkisofs so the script can run
-    bin_dir = tmp_path / 'bin'
-    bin_dir.mkdir()
-    stub_7z = bin_dir / '7z'
-    stub_mkisofs = bin_dir / 'mkisofs'
-
-    stub_7z.write_text('\n'.join([
-        '#!/usr/bin/env bash',
-        'out=""',
-        'for arg in "$@"; do',
-        '  case "$arg" in',
-        '    -o*) out="${arg#-o}" ;;',
-        '  esac',
-        'done',
-        'mkdir -p "$out"',
-    ]) + '\n')
-    stub_mkisofs.write_text('#!/usr/bin/env bash\nwhile [ "$1" != "-o" ]; do shift; done; output=$2; shift 2; touch "$output"\n')
-    stub_7z.chmod(0o755)
-    stub_mkisofs.chmod(0o755)
-
-    env = os.environ.copy()
-    env['PATH'] = f"{bin_dir}:{env['PATH']}"
-
-    iso = tmp_path / 'dummy.iso'
-    iso.write_text('iso')
-    output_img = tmp_path / 'out.img'
-
-    # Link expected overlay path
-    overlay_link = tmp_path / 'overlay'
-    overlay_link.symlink_to(Path(__file__).resolve().parent.parent / 'core' / 'overlay')
-
-    result = run_script([str(iso), str(output_img)], env=env, cwd=tmp_path)
-    assert 'Usage' not in result.stdout + result.stderr
-    assert output_img.exists()
+if __name__ == '__main__':
+    unittest.main()

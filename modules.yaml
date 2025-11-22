@@ -1,0 +1,320 @@
+categories:
+  - name: "Forensics & Incident Response"
+    id: "forensics"
+    base_iso: "ubuntu-22.04-server-amd64.iso"
+    modules:
+      - id: "disk_analysis"
+        name: "Disk Analysis"
+        description: "Tools for disk imaging and analysis"
+        packages:
+          - sleuthkit
+          - autopsy
+          - ddrescue
+          - testdisk
+          - photorec
+          - guymager
+      
+      - id: "memory_forensics"
+        name: "Memory Forensics"
+        description: "Memory dump analysis and acquisition"
+        packages:
+          - volatility3
+          - rekall
+          - limeforensics
+          - pmem
+      
+      - id: "network_forensics"
+        name: "Network Forensics"
+        description: "Network traffic capture and analysis"
+        packages:
+          - wireshark
+          - zeek
+          - tcpdump
+          - networkminer
+          - moloch
+      
+      - id: "mobile_forensics"
+        name: "Mobile Forensics"
+        description: "Android and iOS forensics tools"
+        packages:
+          - android-tools
+          - libimobiledevice
+          - apktool
+          - jadx
+          - scrcpy
+      
+      - id: "file_analysis"
+        name: "File Analysis"
+        description: "File carving and metadata extraction"
+        packages:
+          - binwalk
+          - exiftool
+          - foremost
+          - scalpel
+          - bulk-extractor
+      
+      - id: "timeline_analysis"
+        name: "Timeline Analysis"
+        description: "Create and analyze forensic timelines"
+        packages:
+          - plaso
+          - timesketch
+          - log2timeline
+
+  - name: "Data Science & Analysis"
+    id: "datascience"
+    base_iso: "ubuntu-22.04-desktop-amd64.iso"
+    modules:
+      - id: "python_stack"
+        name: "Python Data Stack"
+        description: "Core Python data science libraries"
+        packages:
+          - python3-pip
+          - jupyter-lab
+          - pandas
+          - numpy
+          - scipy
+          - matplotlib
+          - seaborn
+      
+      - id: "r_environment"
+        name: "R Environment"
+        description: "R statistical computing environment"
+        packages:
+          - r-base
+          - rstudio
+          - tidyverse
+          - ggplot2
+          - caret
+      
+      - id: "ml_frameworks"
+        name: "Machine Learning"
+        description: "Deep learning and ML frameworks"
+        packages:
+          - tensorflow
+          - pytorch
+          - scikit-learn
+          - xgboost
+          - lightgbm
+      
+      - id: "big_data"
+        name: "Big Data Tools"
+        description: "Distributed data processing"
+        packages:
+          - apache-spark
+          - duckdb
+          - polars
+          - dask
+      
+      - id: "visualization"
+        name: "Visualization"
+        description: "Interactive data visualization"
+        packages:
+          - plotly
+          - dash
+          - streamlit
+          - grafana
+          - tableau-public
+      
+      - id: "databases"
+        name: "Databases"
+        description: "Various database systems"
+        packages:
+          - postgresql
+          - mariadb
+          - mongodb
+          - redis
+          - sqlite
+
+  - name: "Development Environment"
+    id: "devenv"
+    base_iso: "ubuntu-22.04-desktop-amd64.iso"
+    modules:
+      - id: "ides"
+        name: "IDEs & Editors"
+        description: "Integrated development environments"
+        packages:
+          - vscode
+          - pycharm-community
+          - intellij-idea-community
+          - vim
+          - emacs
+      
+      - id: "languages_core"
+        name: "Core Languages"
+        description: "Programming language runtimes and compilers"
+        packages:
+          - python3
+          - nodejs
+          - golang
+          - rust
+          - gcc
+          - g++
+          - openjdk-17
+      
+      - id: "web_dev"
+        name: "Web Development"
+        description: "Web development tools and servers"
+        packages:
+          - nodejs
+          - npm
+          - yarn
+          - nginx
+          - apache2
+          - php
+          - composer
+      
+      - id: "containers"
+        name: "Containers & Orchestration"
+        description: "Container platforms and tools"
+        packages:
+          - docker
+          - docker-compose
+          - podman
+          - kubernetes-cli
+          - helm
+      
+      - id: "version_control"
+        name: "Version Control"
+        description: "Git and other VCS tools"
+        packages:
+          - git
+          - git-lfs
+          - gh
+          - gitlab-cli
+          - mercurial
+      
+      - id: "ci_cd"
+        name: "CI/CD Tools"
+        description: "Continuous integration and deployment"
+        packages:
+          - jenkins
+          - gitlab-runner
+          - act
+          - pre-commit
+
+  - name: "Security Testing"
+    id: "security"
+    base_iso: "kali-linux-rolling.iso"
+    modules:
+      - id: "network_scanning"
+        name: "Network Scanning"
+        description: "Port scanners and network discovery"
+        packages:
+          - nmap
+          - masscan
+          - rustscan
+          - zmap
+          - unicornscan
+      
+      - id: "web_testing"
+        name: "Web Application Testing"
+        description: "Web vulnerability scanners and proxies"
+        packages:
+          - burpsuite-community
+          - owasp-zap
+          - sqlmap
+          - nikto
+          - wpscan
+          - ffuf
+      
+      - id: "exploitation"
+        name: "Exploitation Frameworks"
+        description: "Exploit frameworks and databases"
+        packages:
+          - metasploit-framework
+          - exploit-db
+          - searchsploit
+          - msfvenom
+      
+      - id: "wireless"
+        name: "Wireless Testing"
+        description: "WiFi security testing tools"
+        packages:
+          - aircrack-ng
+          - wifite
+          - reaver
+          - bully
+          - pixiewps
+      
+      - id: "password_cracking"
+        name: "Password Attacks"
+        description: "Password cracking and brute forcing"
+        packages:
+          - hashcat
+          - john
+          - hydra
+          - medusa
+          - patator
+          - crunch
+      
+      - id: "reverse_engineering"
+        name: "Reverse Engineering"
+        description: "Disassemblers and debuggers"
+        packages:
+          - ghidra
+          - radare2
+          - gdb
+          - objdump
+          - strace
+          - ltrace
+      
+      - id: "social_engineering"
+        name: "Social Engineering"
+        description: "Phishing and social engineering tools"
+        packages:
+          - social-engineer-toolkit
+          - gophish
+          - evilginx2
+
+  - name: "Hardware Hacking"
+    id: "hardware"
+    base_iso: "ubuntu-22.04-desktop-amd64.iso"
+    modules:
+      - id: "sdr_tools"
+        name: "Software Defined Radio"
+        description: "SDR tools and signal analysis"
+        packages:
+          - gnuradio
+          - gqrx
+          - hackrf
+          - rtl-sdr
+          - sigdigger
+          - inspectrum
+      
+      - id: "firmware_analysis"
+        name: "Firmware Analysis"
+        description: "Firmware extraction and analysis"
+        packages:
+          - binwalk
+          - firmwalker
+          - firmware-mod-kit
+          - openocd
+          - avrdude
+      
+      - id: "jtag_swd"
+        name: "JTAG/SWD Debugging"
+        description: "Hardware debugging interfaces"
+        packages:
+          - openocd
+          - jlink
+          - black-magic-probe
+          - urjtag
+      
+      - id: "car_hacking"
+        name: "Automotive"
+        description: "CAN bus and automotive tools"
+        packages:
+          - can-utils
+          - caringcaribou
+          - socketcan
+          - wireshark-can
+      
+      - id: "iot_testing"
+        name: "IoT Security"
+        description: "IoT protocol testing tools"
+        packages:
+          - mqtt-cli
+          - coap-cli
+          - zigbee-tools
+          - bluetooth-tools
