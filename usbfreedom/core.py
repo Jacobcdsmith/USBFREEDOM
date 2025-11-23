@@ -8,6 +8,8 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Optional
 from .utils import run_command, ensure_dir, get_project_root
+from .partition import PartitionManager, PartitionScheme
+from .persistence import PersistenceBuilder, PersistenceConfig
 
 logger = logging.getLogger(__name__)
 
@@ -176,15 +178,18 @@ class CustomKitBuilder:
         logger.info(f"Custom kit created successfully: {self.output_path}")
 
 class Flasher:
-    def __init__(self, image_path: Path, device_path: str):
+    def __init__(self, image_path: Path, device_path: str, persistence_enabled: bool = False,
+                 persistence_size_mb: int = -1):
         self.image_path = image_path
         self.device_path = device_path
+        self.persistence_enabled = persistence_enabled
+        self.persistence_size_mb = persistence_size_mb
 
     def flash(self):
         """Flash the image to the device."""
         if not self.image_path.exists():
             raise FileNotFoundError(f"Image file not found: {self.image_path}")
-        
+
         # Basic safety check for device path (very minimal)
         if not os.path.exists(self.device_path):
              raise FileNotFoundError(f"Target device not found: {self.device_path}")
@@ -193,15 +198,21 @@ class Flasher:
         # In a real CLI we'd ask for confirmation here, but the class just does the work.
         # The CLI layer should handle the prompt.
 
+        if self.persistence_enabled:
+            logger.info("Flashing with persistence support enabled")
+            self._flash_with_persistence()
+        else:
+            logger.info("Flashing without persistence (standard mode)")
+            self._flash_simple()
+
+    def _flash_simple(self):
+        """Simple flash without persistence (original behavior)."""
         logger.info(f"Flashing {self.image_path} to {self.device_path}...")
-        
+
         # Unmount logic (Linux/macOS specific, simplified)
-        # In a cross-platform python script, we might want to use a library or platform checks
-        # For now, keeping it close to the bash script but wrapping in python
-        
         import platform
         system = platform.system()
-        
+
         if system == 'Linux':
              # Try to unmount
              run_command(['umount', f'{self.device_path}*'], check=False)
@@ -213,9 +224,6 @@ class Flasher:
              dd_bs = '1m'
              conv = 'sync'
         else:
-            # Windows? dd might not exist. 
-            # The original script was bash, implying Linux/macOS/WSL.
-            # We will assume dd is available or this is running in a compatible env.
             dd_bs = '4M'
             conv = 'fsync'
 
@@ -227,13 +235,101 @@ class Flasher:
             'status=progress',
             f'conv={conv}'
         ]
-        
-        # dd writes to stderr for progress, so we might want to let it stream to user
-        # run_command captures output. For flashing, we might want to use subprocess.run directly without capture
-        # to show progress bar.
+
         subprocess.run(cmd, check=True)
-        
+
         if system == 'Linux':
             run_command(['sync'])
-            
-        logger.info("Done.")
+
+        logger.info("Flash completed successfully")
+
+    def _flash_with_persistence(self):
+        """Flash image and create persistence partition."""
+        logger.info("Starting flash with persistence...")
+
+        # Step 1: Get image size
+        image_size = os.path.getsize(self.image_path)
+        logger.info(f"Image size: {image_size / (1024**2):.1f} MB")
+
+        # Step 2: Setup partition manager
+        pm = PartitionManager(self.device_path)
+
+        # Step 3: Unmount all partitions
+        logger.info("Unmounting existing partitions...")
+        pm.unmount_all()
+
+        # Step 4: Wipe device
+        logger.info("Wiping device (this may take a moment)...")
+        pm.wipe_device()
+
+        # Step 5: Get device info
+        dev_info = pm.get_device_info()
+        if dev_info:
+            logger.info(f"Device: {dev_info}")
+
+        # Step 6: Calculate partition sizes
+        # Boot partition needs to fit the image plus some headroom
+        boot_size_mb = int((image_size / (1024**2)) * 1.2) + 100  # 20% headroom + 100MB
+
+        scheme = PartitionScheme(
+            boot_size_mb=boot_size_mb,
+            persistence_size_mb=self.persistence_size_mb
+        )
+
+        # Step 7: Create partition table
+        logger.info("Creating partition table...")
+        pm.create_partition_table(scheme)
+
+        # Step 8: Format partitions
+        logger.info("Formatting partitions...")
+        pm.format_partitions()
+
+        # Step 9: Flash image to first partition
+        logger.info("Flashing image to boot partition...")
+        boot_partition = pm._get_partition_path(1)
+
+        cmd = [
+            'dd',
+            f'if={self.image_path}',
+            f'of={boot_partition}',
+            'bs=4M',
+            'status=progress',
+            'conv=fsync'
+        ]
+        subprocess.run(cmd, check=True)
+        run_command(['sync'])
+
+        # Step 10: Setup persistence on second partition
+        logger.info("Setting up persistence structure...")
+        persist_partition = pm._get_partition_path(2)
+        pb = PersistenceBuilder(persist_partition)
+
+        if pb.setup_persistence_structure():
+            logger.info("Persistence structure created successfully")
+        else:
+            logger.error("Failed to create persistence structure")
+            raise RuntimeError("Persistence setup failed")
+
+        # Step 11: Verify persistence
+        logger.info("Verifying persistence...")
+        if pb.verify_persistence():
+            logger.info("Persistence verification passed")
+        else:
+            logger.warning("Persistence verification failed")
+
+        # Step 12: Final sync
+        run_command(['sync'])
+
+        logger.info("="*60)
+        logger.info("Flash with persistence completed successfully!")
+        logger.info("="*60)
+        logger.info(f"Device: {self.device_path}")
+        logger.info(f"Boot partition: {boot_partition}")
+        logger.info(f"Persistence partition: {persist_partition}")
+
+        # Show partition info
+        boot_info = pm.get_partition_info(1)
+        persist_info = pm.get_partition_info(2)
+        logger.info(f"Boot size: {boot_info.get('size', 'Unknown')}")
+        logger.info(f"Persistence size: {persist_info.get('size', 'Unknown')}")
+        logger.info("="*60)

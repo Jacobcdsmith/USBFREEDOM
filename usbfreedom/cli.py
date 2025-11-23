@@ -5,6 +5,7 @@ from pathlib import Path
 from .core import Toolkit, Builder, Flasher, Category, CustomKitBuilder
 from .utils import get_project_root
 from .interactive import select_category, select_modules
+from .partition import list_usb_devices
 
 # Configure logging
 logging.basicConfig(
@@ -35,6 +36,13 @@ def main():
     flash_parser = subparsers.add_parser('flash', help='Flash an image to a USB drive')
     flash_parser.add_argument('image', help='Path to the image file')
     flash_parser.add_argument('device', help='Target device path (e.g., /dev/sdX)')
+    flash_parser.add_argument('--persistence', action='store_true',
+                             help='Enable persistence (creates separate partition for data)')
+    flash_parser.add_argument('--persistence-size', type=int, metavar='MB',
+                             help='Size of persistence partition in MB (-1 for all remaining space)')
+
+    # List devices command
+    subparsers.add_parser('list-devices', help='List available USB storage devices')
     
     # List categories command
     subparsers.add_parser('list-categories', help='List available module categories')
@@ -77,17 +85,52 @@ def main():
     elif args.command == 'flash':
         # Confirm before flashing
         print(f"WARNING: All data on {args.device} will be overwritten!")
+
+        if args.persistence:
+            print(f"Persistence will be ENABLED")
+            if args.persistence_size:
+                print(f"Persistence size: {args.persistence_size} MB")
+            else:
+                print(f"Persistence size: All remaining space")
+
         confirm = input("Are you sure you want to continue? [y/N]: ")
         if confirm.lower() != 'y':
             print("Aborted.")
             sys.exit(0)
 
-        flasher = Flasher(Path(args.image), args.device)
+        # Create flasher with persistence options
+        persistence_enabled = args.persistence
+        persistence_size = args.persistence_size if args.persistence_size else -1
+
+        flasher = Flasher(
+            Path(args.image),
+            args.device,
+            persistence_enabled=persistence_enabled,
+            persistence_size_mb=persistence_size
+        )
+
         try:
             flasher.flash()
         except Exception as e:
             logger.error(f"Flash failed: {e}")
             sys.exit(1)
+
+    elif args.command == 'list-devices':
+        print("Scanning for USB storage devices...")
+        devices = list_usb_devices()
+
+        if not devices:
+            print("No removable USB storage devices found.")
+            sys.exit(0)
+
+        print(f"\n{'Device':<15} {'Size':<10} {'Vendor':<15} {'Model'}")
+        print("-" * 70)
+        for dev in devices:
+            print(f"{dev.path:<15} {dev.size_gb:>8.1f}GB {dev.vendor:<15} {dev.model}")
+
+        print(f"\nFound {len(devices)} device(s)")
+        print("\nTo flash with persistence:")
+        print(f"  usbfreedom flash <image> <device> --persistence --persistence-size <MB>")
 
     elif args.command == 'list-categories':
         # Load categories from modules.yaml
