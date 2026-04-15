@@ -1,8 +1,6 @@
 """Partition management for USB devices with persistence support."""
 import subprocess
 import logging
-import re
-from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 from .utils import run_command
@@ -34,13 +32,15 @@ class PartitionScheme:
     boot_size_mb: int  # Size of bootable partition
     persistence_size_mb: int  # Size of persistence partition (-1 for remaining)
 
+    BUFFER_SIZE_MB: int = 100  # Buffer space to leave at end of device
+
     def calculate_sizes(self, total_size_bytes: int) -> Tuple[int, int]:
         """Calculate actual partition sizes in bytes."""
         boot_bytes = self.boot_size_mb * 1024 * 1024
 
         if self.persistence_size_mb == -1:
             # Use remaining space
-            persistence_bytes = total_size_bytes - boot_bytes - (100 * 1024 * 1024)  # Leave 100MB buffer
+            persistence_bytes = total_size_bytes - boot_bytes - (self.BUFFER_SIZE_MB * 1024 * 1024)
         else:
             persistence_bytes = self.persistence_size_mb * 1024 * 1024
 
@@ -93,7 +93,7 @@ class PartitionManager:
                     removable=removable
                 )
         except Exception as e:
-            logger.error(f"Failed to get device info: {e}")
+            logger.error(f"Failed to get device info: {type(e).__name__}: {e}")
 
         return None
 
@@ -183,16 +183,17 @@ class PartitionManager:
         # Sync to ensure partition table is written
         run_command(['sync'])
 
-        # Re-read partition table
+        # Re-read partition table and wait for kernel to recognize new partitions
         run_command(['partprobe', self.device_path], check=False)
+        run_command(['udevadm', 'settle'], check=False)
 
         logger.info("Partition table created successfully")
 
     def format_partitions(self, boot_label: str = "USBBOOT", persist_label: str = "persistence"):
         """Format partitions with appropriate filesystems."""
         # Determine partition device names
-        boot_part = self._get_partition_path(1)
-        persist_part = self._get_partition_path(2)
+        boot_part = self.get_partition_path(1)
+        persist_part = self.get_partition_path(2)
 
         logger.info(f"Formatting boot partition: {boot_part}")
         # Format boot partition as FAT32
@@ -205,7 +206,7 @@ class PartitionManager:
         run_command(['sync'])
         logger.info("Partitions formatted successfully")
 
-    def _get_partition_path(self, partition_num: int) -> str:
+    def get_partition_path(self, partition_num: int) -> str:
         """Get the device path for a partition number."""
         # Handle both /dev/sdX and /dev/nvmeXnY naming
         if 'nvme' in self.device_path or 'mmcblk' in self.device_path:
@@ -215,7 +216,7 @@ class PartitionManager:
 
     def get_partition_info(self, partition_num: int) -> dict:
         """Get information about a specific partition."""
-        part_path = self._get_partition_path(partition_num)
+        part_path = self.get_partition_path(partition_num)
 
         try:
             result = run_command([
@@ -231,7 +232,7 @@ class PartitionManager:
                     'label': parts[2] if len(parts) > 2 else ''
                 }
         except Exception as e:
-            logger.error(f"Failed to get partition info: {e}")
+            logger.error(f"Failed to get partition info: {type(e).__name__}: {e}")
 
         return {'path': part_path}
 
@@ -270,6 +271,6 @@ def list_usb_devices() -> List[DeviceInfo]:
                         removable=removable
                     ))
     except Exception as e:
-        logger.error(f"Failed to list USB devices: {e}")
+        logger.error(f"Failed to list USB devices: {type(e).__name__}: {e}")
 
     return devices

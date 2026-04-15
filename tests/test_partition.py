@@ -1,8 +1,7 @@
 """Tests for partition management."""
 import unittest
-from unittest.mock import Mock, patch, MagicMock
-from pathlib import Path
-from usbfreedom.partition import PartitionManager, PartitionScheme, DeviceInfo, list_usb_devices
+from unittest.mock import Mock, patch
+from usbfreedom.partition import PartitionManager, PartitionScheme, DeviceInfo
 
 
 class TestPartitionScheme(unittest.TestCase):
@@ -70,7 +69,7 @@ class TestPartitionManager(unittest.TestCase):
         """Test block device detection."""
         mock_run.return_value = Mock(returncode=0)
 
-        pm = PartitionManager("/dev/sdb")
+        PartitionManager("/dev/sdb")
         # Constructor calls _is_block_device, so if we get here it passed
 
         mock_run.assert_called()
@@ -80,24 +79,24 @@ class TestPartitionManager(unittest.TestCase):
         pm = PartitionManager.__new__(PartitionManager)
         pm.device_path = "/dev/sdb"
 
-        self.assertEqual(pm._get_partition_path(1), "/dev/sdb1")
-        self.assertEqual(pm._get_partition_path(2), "/dev/sdb2")
+        self.assertEqual(pm.get_partition_path(1), "/dev/sdb1")
+        self.assertEqual(pm.get_partition_path(2), "/dev/sdb2")
 
     def test_get_partition_path_nvme(self):
         """Test partition path generation for NVMe devices."""
         pm = PartitionManager.__new__(PartitionManager)
         pm.device_path = "/dev/nvme0n1"
 
-        self.assertEqual(pm._get_partition_path(1), "/dev/nvme0n1p1")
-        self.assertEqual(pm._get_partition_path(2), "/dev/nvme0n1p2")
+        self.assertEqual(pm.get_partition_path(1), "/dev/nvme0n1p1")
+        self.assertEqual(pm.get_partition_path(2), "/dev/nvme0n1p2")
 
     def test_get_partition_path_mmc(self):
         """Test partition path generation for MMC devices."""
         pm = PartitionManager.__new__(PartitionManager)
         pm.device_path = "/dev/mmcblk0"
 
-        self.assertEqual(pm._get_partition_path(1), "/dev/mmcblk0p1")
-        self.assertEqual(pm._get_partition_path(2), "/dev/mmcblk0p2")
+        self.assertEqual(pm.get_partition_path(1), "/dev/mmcblk0p1")
+        self.assertEqual(pm.get_partition_path(2), "/dev/mmcblk0p2")
 
 
 if __name__ == '__main__':

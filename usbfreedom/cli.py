@@ -38,8 +38,8 @@ def main():
     flash_parser.add_argument('device', help='Target device path (e.g., /dev/sdX)')
     flash_parser.add_argument('--persistence', action='store_true',
                              help='Enable persistence (creates separate partition for data)')
-    flash_parser.add_argument('--persistence-size', type=int, metavar='MB',
-                             help='Size of persistence partition in MB (-1 for all remaining space)')
+    flash_parser.add_argument('--persistence-size', type=int, metavar='MB', default=-1,
+                             help='Size of persistence partition in MB (default: -1 for all remaining space)')
 
     # List devices command
     subparsers.add_parser('list-devices', help='List available USB storage devices')
@@ -88,7 +88,7 @@ def main():
 
         if args.persistence:
             print(f"Persistence will be ENABLED")
-            if args.persistence_size:
+            if args.persistence_size is not None:
                 print(f"Persistence size: {args.persistence_size} MB")
             else:
                 print(f"Persistence size: All remaining space")
@@ -100,7 +100,7 @@ def main():
 
         # Create flasher with persistence options
         persistence_enabled = args.persistence
-        persistence_size = args.persistence_size if args.persistence_size else -1
+        persistence_size = args.persistence_size if args.persistence_size is not None else -1
 
         flasher = Flasher(
             Path(args.image),

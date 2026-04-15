@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 from .utils import run_command, ensure_dir, get_project_root
 from .partition import PartitionManager, PartitionScheme
-from .persistence import PersistenceBuilder, PersistenceConfig
+from .persistence import PersistenceBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -269,7 +269,9 @@ class Flasher:
 
         # Step 6: Calculate partition sizes
         # Boot partition needs to fit the image plus some headroom
-        boot_size_mb = int((image_size / (1024**2)) * 1.2) + 100  # 20% headroom + 100MB
+        BOOT_HEADROOM_MULTIPLIER = 1.2  # 20% headroom
+        BOOT_EXTRA_MB = 100  # Extra buffer in MB
+        boot_size_mb = int((image_size / (1024**2)) * BOOT_HEADROOM_MULTIPLIER) + BOOT_EXTRA_MB
 
         scheme = PartitionScheme(
             boot_size_mb=boot_size_mb,
@@ -286,7 +288,7 @@ class Flasher:
 
         # Step 9: Flash image to first partition
         logger.info("Flashing image to boot partition...")
-        boot_partition = pm._get_partition_path(1)
+        boot_partition = pm.get_partition_path(1)
 
         cmd = [
             'dd',
@@ -301,7 +303,7 @@ class Flasher:
 
         # Step 10: Setup persistence on second partition
         logger.info("Setting up persistence structure...")
-        persist_partition = pm._get_partition_path(2)
+        persist_partition = pm.get_partition_path(2)
         pb = PersistenceBuilder(persist_partition)
 
         if pb.setup_persistence_structure():

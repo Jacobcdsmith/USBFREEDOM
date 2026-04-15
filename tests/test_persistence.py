@@ -1,6 +1,6 @@
 """Tests for persistence configuration."""
 import unittest
-from unittest.mock import Mock, patch, mock_open, MagicMock
+from unittest.mock import patch, mock_open
 from pathlib import Path
 from usbfreedom.persistence import (
     PersistenceConfig,
@@ -98,7 +98,7 @@ class TestPersistenceBuilder(unittest.TestCase):
         # Mock temporary directory
         mock_tmpdir.return_value.__enter__.return_value = "/tmp/test"
 
-        result = self.builder.setup_persistence_structure()
+        self.builder.setup_persistence_structure()
 
         # Verify mount command was called
         mount_calls = [call for call in mock_run.call_args_list if 'mount' in str(call)]

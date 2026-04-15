@@ -2,7 +2,6 @@
 import logging
 import tempfile
 from pathlib import Path
-from typing import Optional
 from .utils import run_command
 
 logger = logging.getLogger(__name__)
@@ -49,15 +48,14 @@ class PersistenceBuilder:
                 logger.info(f"Mounting {self.partition_device} to {mount_point}")
                 run_command(['mount', self.partition_device, str(mount_point)])
 
-                # Create directory structure
-                directories = [
-                    'upper',      # Overlayfs upper directory
-                    'work',       # Overlayfs work directory
-                    'home',       # User home directories
-                    'root',       # Root home
-                    'etc',        # Configuration files
-                    'var/log',    # Log files
-                ]
+                # Create directory structure using config paths as the single source of truth.
+                # /usr/local is excluded from pre-created directories because its parent (/usr)
+                # is a system path; the live system will create it via overlayfs as needed.
+                config = PersistenceConfig()
+                directories = (
+                    [path.lstrip('/') for path in config.get_persistence_paths() if path != '/usr/local']
+                    + ['upper', 'work']
+                )
 
                 for dir_path in directories:
                     full_path = mount_point / dir_path
@@ -72,11 +70,9 @@ class PersistenceBuilder:
                 with open(conf_path, 'w') as f:
                     f.write("# Persistence configuration for USBFREEDOM\n")
                     f.write("# Each line specifies a directory to persist\n\n")
-                    f.write("/home union\n")
-                    f.write("/var/log union\n")
-                    f.write("/etc union\n")
-                    f.write("/root union\n")
-                    f.write("/usr/local union\n")
+                    # Write each persistence path from config
+                    for path in config.get_persistence_paths():
+                        f.write(f"{path} union\n")
 
                 # Sync to ensure everything is written
                 run_command(['sync'])
@@ -85,7 +81,7 @@ class PersistenceBuilder:
                 return True
 
             except Exception as e:
-                logger.error(f"Failed to create persistence structure: {e}")
+                logger.error(f"Failed to create persistence structure: {type(e).__name__}: {e}")
                 return False
 
             finally:
@@ -117,7 +113,7 @@ class PersistenceBuilder:
                 return True
 
             except Exception as e:
-                logger.error(f"Verification failed: {e}")
+                logger.error(f"Verification failed: {type(e).__name__}: {e}")
                 return False
 
             finally:
