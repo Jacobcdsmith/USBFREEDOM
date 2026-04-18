@@ -110,7 +110,9 @@ class Builder:
 
 class CustomKitBuilder:
     """Builder for custom kits with selected modules."""
-    
+
+    INSTALL_SCRIPT_PERMISSIONS = 0o755  # rwxr-xr-x
+
     def __init__(self, category: Category, selected_modules: List[str], output_path: Path):
         self.category = category
         self.selected_modules = selected_modules
@@ -159,7 +161,7 @@ class CustomKitBuilder:
                     f.write(f"apt-get update && apt-get install -y {packages}\n")
             
             # Make script executable
-            os.chmod(install_script_path, 0o755)
+            os.chmod(install_script_path, self.INSTALL_SCRIPT_PERMISSIONS)
             
             # Create bootable image
             logger.info("Creating bootable image...")
@@ -178,6 +180,14 @@ class CustomKitBuilder:
         logger.info(f"Custom kit created successfully: {self.output_path}")
 
 class Flasher:
+    BOOT_HEADROOM_MULTIPLIER = 1.2  # 20% headroom over image size for boot partition
+    BOOT_EXTRA_MB = 100             # Extra MB buffer added to boot partition size
+    DD_BLOCK_SIZE_LINUX = '4M'      # dd block size on Linux
+    DD_BLOCK_SIZE_MACOS = '1m'      # dd block size on macOS
+    DD_CONV_LINUX = 'fsync'         # dd conv option on Linux
+    DD_CONV_MACOS = 'sync'          # dd conv option on macOS
+    LOG_SEPARATOR_WIDTH = 60        # Width of the '=' separator line in log output
+
     def __init__(self, image_path: Path, device_path: str, persistence_enabled: bool = False,
                  persistence_size_mb: int = -1):
         self.image_path = image_path
@@ -216,16 +226,16 @@ class Flasher:
         if system == 'Linux':
              # Try to unmount
              run_command(['umount', f'{self.device_path}*'], check=False)
-             dd_bs = '4M'
-             conv = 'fsync'
+             dd_bs = self.DD_BLOCK_SIZE_LINUX
+             conv = self.DD_CONV_LINUX
         elif system == 'Darwin': # macOS
              # Try to unmount
              run_command(['diskutil', 'unmountDisk', self.device_path], check=False)
-             dd_bs = '1m'
-             conv = 'sync'
+             dd_bs = self.DD_BLOCK_SIZE_MACOS
+             conv = self.DD_CONV_MACOS
         else:
-            dd_bs = '4M'
-            conv = 'fsync'
+            dd_bs = self.DD_BLOCK_SIZE_LINUX
+            conv = self.DD_CONV_LINUX
 
         cmd = [
             'dd',
@@ -244,7 +254,12 @@ class Flasher:
         logger.info("Flash completed successfully")
 
     def _flash_with_persistence(self):
-        """Flash image and create persistence partition."""
+        """Flash image and create persistence partition.
+
+        Note: Persistence mode relies on Linux-specific tools (parted, partprobe,
+        mkfs.vfat, mkfs.ext4, wipefs) and therefore uses Linux dd parameters
+        (DD_BLOCK_SIZE_LINUX / DD_CONV_LINUX) unconditionally.
+        """
         logger.info("Starting flash with persistence...")
 
         # Step 1: Get image size
@@ -269,9 +284,7 @@ class Flasher:
 
         # Step 6: Calculate partition sizes
         # Boot partition needs to fit the image plus some headroom
-        BOOT_HEADROOM_MULTIPLIER = 1.2  # 20% headroom
-        BOOT_EXTRA_MB = 100  # Extra buffer in MB
-        boot_size_mb = int((image_size / (1024**2)) * BOOT_HEADROOM_MULTIPLIER) + BOOT_EXTRA_MB
+        boot_size_mb = int((image_size / (1024**2)) * self.BOOT_HEADROOM_MULTIPLIER) + self.BOOT_EXTRA_MB
 
         scheme = PartitionScheme(
             boot_size_mb=boot_size_mb,
@@ -294,9 +307,9 @@ class Flasher:
             'dd',
             f'if={self.image_path}',
             f'of={boot_partition}',
-            'bs=4M',
+            f'bs={self.DD_BLOCK_SIZE_LINUX}',
             'status=progress',
-            'conv=fsync'
+            f'conv={self.DD_CONV_LINUX}'
         ]
         subprocess.run(cmd, check=True)
         run_command(['sync'])
@@ -322,9 +335,9 @@ class Flasher:
         # Step 12: Final sync
         run_command(['sync'])
 
-        logger.info("="*60)
+        logger.info("=" * self.LOG_SEPARATOR_WIDTH)
         logger.info("Flash with persistence completed successfully!")
-        logger.info("="*60)
+        logger.info("=" * self.LOG_SEPARATOR_WIDTH)
         logger.info(f"Device: {self.device_path}")
         logger.info(f"Boot partition: {boot_partition}")
         logger.info(f"Persistence partition: {persist_partition}")
@@ -334,4 +347,4 @@ class Flasher:
         persist_info = pm.get_partition_info(2)
         logger.info(f"Boot size: {boot_info.get('size', 'Unknown')}")
         logger.info(f"Persistence size: {persist_info.get('size', 'Unknown')}")
-        logger.info("="*60)
+        logger.info("=" * self.LOG_SEPARATOR_WIDTH)

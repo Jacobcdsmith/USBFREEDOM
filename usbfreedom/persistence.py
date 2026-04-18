@@ -6,6 +6,15 @@ from .utils import run_command
 
 logger = logging.getLogger(__name__)
 
+# Persistence structure identifiers
+PERSISTENCE_CONF_FILENAME = 'persistence.conf'
+OVERLAYFS_UPPER_DIR = 'upper'
+OVERLAYFS_WORK_DIR = 'work'
+
+# GRUB boot menu defaults
+GRUB_MENU_TIMEOUT = 10
+GRUB_MENU_DEFAULT = 0
+
 
 class PersistenceConfig:
     """Configuration for persistence setup."""
@@ -54,7 +63,7 @@ class PersistenceBuilder:
                 config = PersistenceConfig()
                 directories = (
                     [path.lstrip('/') for path in config.get_persistence_paths() if path != '/usr/local']
-                    + ['upper', 'work']
+                    + [OVERLAYFS_UPPER_DIR, OVERLAYFS_WORK_DIR]
                 )
 
                 for dir_path in directories:
@@ -64,7 +73,7 @@ class PersistenceBuilder:
 
                 # Create persistence.conf file
                 # This file tells the live system what to persist
-                conf_path = mount_point / 'persistence.conf'
+                conf_path = mount_point / PERSISTENCE_CONF_FILENAME
                 logger.info(f"Creating {conf_path}")
 
                 with open(conf_path, 'w') as f:
@@ -103,7 +112,7 @@ class PersistenceBuilder:
                 run_command(['mount', self.partition_device, str(mount_point)])
 
                 # Check for required directories
-                required = ['upper', 'work', 'persistence.conf']
+                required = [OVERLAYFS_UPPER_DIR, OVERLAYFS_WORK_DIR, PERSISTENCE_CONF_FILENAME]
                 for item in required:
                     if not (mount_point / item).exists():
                         logger.error(f"Missing required item: {item}")
@@ -190,8 +199,8 @@ menuentry "USBFREEDOM (Failsafe)" {
             # Create new config
             with open(grub_cfg_path, 'w') as f:
                 f.write('# GRUB Configuration for USBFREEDOM\n')
-                f.write('set timeout=10\n')
-                f.write('set default=0\n\n')
+                f.write(f'set timeout={GRUB_MENU_TIMEOUT}\n')
+                f.write(f'set default={GRUB_MENU_DEFAULT}\n\n')
                 f.write(new_entry)
 
         logger.info(f"GRUB configuration written to {grub_cfg_path}")

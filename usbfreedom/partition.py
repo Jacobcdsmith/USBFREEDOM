@@ -7,6 +7,14 @@ from .utils import run_command
 
 logger = logging.getLogger(__name__)
 
+# Partition and filesystem type identifiers
+PARTITION_TABLE_TYPE = 'gpt'
+BOOT_FILESYSTEM = 'fat32'
+PERSIST_FILESYSTEM = 'ext4'
+PARTITION_START_MIB = 1  # 1MiB alignment offset for the first partition
+LSBLK_DISK_TYPE = 'disk'
+UNKNOWN_DEVICE_FIELD = 'Unknown'
+
 
 @dataclass
 class DeviceInfo:
@@ -81,8 +89,8 @@ class PartitionManager:
             parts = result.stdout.strip().split()
             if len(parts) >= 4:
                 size_bytes = int(parts[0])
-                vendor = parts[1] if len(parts) > 1 else "Unknown"
-                model = parts[2] if len(parts) > 2 else "Unknown"
+                vendor = parts[1] if len(parts) > 1 else UNKNOWN_DEVICE_FIELD
+                model = parts[2] if len(parts) > 2 else UNKNOWN_DEVICE_FIELD
                 removable = parts[3] == '1' if len(parts) > 3 else False
 
                 return DeviceInfo(
@@ -161,14 +169,14 @@ class PartitionManager:
 
         # Create partition table using parted
         # First, create GPT label
-        run_command(['parted', '-s', self.device_path, 'mklabel', 'gpt'])
+        run_command(['parted', '-s', self.device_path, 'mklabel', PARTITION_TABLE_TYPE])
 
         # Create boot partition (FAT32, bootable)
-        # Start at 1MiB for alignment
-        boot_end_mb = 1 + (boot_size // (1024*1024))
+        # Start at PARTITION_START_MIB for alignment
+        boot_end_mb = PARTITION_START_MIB + (boot_size // (1024 * 1024))
         run_command([
             'parted', '-s', self.device_path,
-            'mkpart', 'primary', 'fat32', '1MiB', f'{boot_end_mb}MiB'
+            'mkpart', 'primary', BOOT_FILESYSTEM, f'{PARTITION_START_MIB}MiB', f'{boot_end_mb}MiB'
         ])
 
         # Set boot flag
@@ -177,7 +185,7 @@ class PartitionManager:
         # Create persistence partition (ext4)
         run_command([
             'parted', '-s', self.device_path,
-            'mkpart', 'primary', 'ext4', f'{boot_end_mb}MiB', '100%'
+            'mkpart', 'primary', PERSIST_FILESYSTEM, f'{boot_end_mb}MiB', '100%'
         ])
 
         # Sync to ensure partition table is written
@@ -262,7 +270,7 @@ def list_usb_devices() -> List[DeviceInfo]:
                 dev_type = parts[5]
 
                 # Only include removable disks
-                if removable and dev_type == 'disk':
+                if removable and dev_type == LSBLK_DISK_TYPE:
                     devices.append(DeviceInfo(
                         path=f'/dev/{name}',
                         size_bytes=size_bytes,
