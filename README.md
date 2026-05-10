@@ -50,7 +50,9 @@ git push origin main
 
 ## Flashing Images to USB
 
-Once an image is built, use the helper script to write it to a USB drive:
+### Basic Flash (No Persistence)
+
+Use the helper script to write an image to a USB drive:
 
 ```bash
 sudo ./flash_usb.sh <image_file> <device>
@@ -62,4 +64,115 @@ Example:
 sudo ./flash_usb.sh pentest-kit.img /dev/sdX
 ```
 
+### Flash with Persistence ✨ NEW
+
+**Persistence allows your USB drive to save data, configurations, and changes across reboots!**
+
+#### List Available USB Devices
+
+```bash
+python3 -m usbfreedom.cli list-devices
+```
+
+#### Flash with All Remaining Space for Persistence
+
+```bash
+sudo python3 -m usbfreedom.cli flash pentest-kit.img /dev/sdX --persistence
+```
+
+#### Flash with Specific Persistence Size
+
+```bash
+# Flash with 4GB persistence partition
+sudo python3 -m usbfreedom.cli flash pentest-kit.img /dev/sdX --persistence --persistence-size 4096
+
+# Flash with 8GB persistence partition
+sudo python3 -m usbfreedom.cli flash pentest-kit.img /dev/sdX --persistence --persistence-size 8192
+```
+
+**What gets persisted?**
+- User home directories (`/home`)
+- System configurations (`/etc`)
+- Log files (`/var/log`)
+- Root user data (`/root`)
+- Local installations (`/usr/local`)
+
+**See [PERSISTENCE.md](PERSISTENCE.md) for complete documentation.**
+
 Replace `/dev/sdX` with your target drive.
+
+## Features
+
+### 🔄 Persistence Support
+
+- **Dual-partition layout**: Bootable system + persistent data partition
+- **Configurable size**: Choose how much space to allocate for persistence
+- **Automatic setup**: Persistence structure created during flash
+- **Boot options**: Choose persistence or fresh state at boot
+- **Management tools**: Built-in scripts to manage persistent data
+
+See [PERSISTENCE.md](PERSISTENCE.md) for detailed documentation.
+
+### 🛠️ Toolkit Management
+
+- **Pre-configured toolkits**: 8 specialized kits for different use cases
+- **Custom kits**: Build your own with modular package selection
+- **Interactive CLI**: User-friendly command-line interface
+
+### 📦 Modular Architecture
+
+- **Category-based**: Tools organized by use case
+- **Package modules**: Fine-grained control over installed tools
+- **YAML configuration**: Easy to customize and extend
+
+## Command Reference
+
+```bash
+# List available toolkits
+python3 -m usbfreedom.cli list-toolkits
+
+# List module categories
+python3 -m usbfreedom.cli list-categories
+
+# Build a pre-configured toolkit
+python3 -m usbfreedom.cli build <toolkit_id> <output_file>
+
+# Build a custom kit interactively
+python3 -m usbfreedom.cli build-custom <output_file>
+
+# List USB devices
+python3 -m usbfreedom.cli list-devices
+
+# Flash without persistence
+python3 -m usbfreedom.cli flash <image> <device>
+
+# Flash with persistence
+python3 -m usbfreedom.cli flash <image> <device> --persistence --persistence-size <MB>
+```
+
+## Project Structure
+
+```
+USBFREEDOM/
+├── usbfreedom/              # Python package
+│   ├── cli.py              # Command-line interface
+│   ├── core.py             # Core builder and flasher classes
+│   ├── partition.py        # Partition management
+│   ├── persistence.py      # Persistence configuration
+│   ├── interactive.py      # Interactive menus
+│   └── utils.py            # Utility functions
+├── core/overlay/            # Files copied to all images
+│   ├── etc/                # Configuration files
+│   └── usr/local/bin/      # Utility scripts
+│       ├── enable-persistence.sh
+│       ├── disable-persistence.sh
+│       ├── backup-persistence.sh
+│       └── persistence-status.sh
+├── tests/                   # Unit tests
+├── modules.yaml             # Module definitions
+├── toolkits.yaml           # Toolkit configurations
+├── build.sh                # Legacy build script
+├── flash_usb.sh            # Legacy flash script
+├── README.md               # This file
+└── PERSISTENCE.md          # Persistence documentation
+```
