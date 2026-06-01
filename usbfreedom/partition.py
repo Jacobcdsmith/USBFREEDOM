@@ -1,6 +1,7 @@
 """Partition management for USB devices with persistence support."""
 import subprocess
 import logging
+import json
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 from .utils import run_command
@@ -250,34 +251,40 @@ def list_usb_devices() -> List[DeviceInfo]:
     devices = []
 
     try:
-        # Use lsblk to find removable block devices
+        # Use JSON output to avoid whitespace parsing issues in vendor/model fields.
         result = run_command([
-            'lsblk', '-n', '-d', '-o', 'NAME,SIZE,VENDOR,MODEL,RM,TYPE',
-            '-b'
+            'lsblk', '-J', '-d', '-o', 'NAME,SIZE,VENDOR,MODEL,RM,TYPE', '-b'
         ], check=False)
 
         if result.returncode != 0:
             return devices
 
-        for line in result.stdout.strip().split('\n'):
-            parts = line.split()
-            if len(parts) >= 6:
-                name = parts[0]
-                size_bytes = int(parts[1])
-                vendor = parts[2]
-                model = parts[3]
-                removable = parts[4] == '1'
-                dev_type = parts[5]
+        payload = json.loads(result.stdout or "{}")
+        for dev in payload.get('blockdevices', []):
+            removable = str(dev.get('rm', '0')) == '1'
+            dev_type = dev.get('type', '')
+            if not (removable and dev_type == LSBLK_DISK_TYPE):
+                continue
 
-                # Only include removable disks
-                if removable and dev_type == LSBLK_DISK_TYPE:
-                    devices.append(DeviceInfo(
-                        path=f'/dev/{name}',
-                        size_bytes=size_bytes,
-                        vendor=vendor,
-                        model=model,
-                        removable=removable
-                    ))
+            name = dev.get('name', '')
+            if not name:
+                continue
+            size_raw = dev.get('size', 0)
+            try:
+                size_bytes = int(size_raw)
+            except (TypeError, ValueError):
+                continue
+
+            vendor = (dev.get('vendor') or '').strip() or UNKNOWN_DEVICE_FIELD
+            model = (dev.get('model') or '').strip() or UNKNOWN_DEVICE_FIELD
+
+            devices.append(DeviceInfo(
+                path=f'/dev/{name}',
+                size_bytes=size_bytes,
+                vendor=vendor,
+                model=model,
+                removable=removable
+            ))
     except Exception as e:
         logger.error(f"Failed to list USB devices: {type(e).__name__}: {e}")
 
