@@ -25,9 +25,7 @@ class TestUSBFreedom(unittest.TestCase):
 
     @patch('usbfreedom.core.shutil.copytree')
     @patch('usbfreedom.core.run_command')
-    def test_builder(self, mock_copytree, mock_run_command):
-        # Top patch: copytree -> passed first
-        # Bottom patch: run_command -> passed second
+    def test_builder(self, mock_run_command, mock_copytree):
         
         # Setup
         output_path = self.tmp_path / "output.img"
@@ -51,9 +49,7 @@ class TestUSBFreedom(unittest.TestCase):
 
     @patch('usbfreedom.core.run_command')
     @patch('usbfreedom.core.subprocess.run')
-    def test_flasher(self, mock_run_command, mock_subprocess_run):
-        # Top patch: run_command -> passed first
-        # Bottom patch: subprocess.run -> passed second
+    def test_flasher(self, mock_subprocess_run, mock_run_command):
         
         # Setup
         image_path = self.tmp_path / "test.img"
