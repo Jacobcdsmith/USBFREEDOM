@@ -2,6 +2,7 @@ import unittest
 import shutil
 import tempfile
 import os
+import stat
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 from usbfreedom.core import Toolkit, Builder, Flasher
@@ -60,8 +61,10 @@ class TestUSBFreedom(unittest.TestCase):
         device_path = self.tmp_path / "dev" / "sdb" # Fake device path
         (self.tmp_path / "dev").mkdir(parents=True, exist_ok=True)
         
-        # Mock os.path.exists for device check
-        with patch('os.path.exists', return_value=True):
+        # Mock device checks to simulate a valid block device
+        with patch('os.path.exists', return_value=True), \
+             patch('usbfreedom.core.os.stat') as mock_stat:
+            mock_stat.return_value.st_mode = stat.S_IFBLK
             flasher = Flasher(image_path, str(device_path))
             flasher.flash()
 
