@@ -31,10 +31,10 @@ class TestUSBFreedom(unittest.TestCase):
         
         # Setup
         output_path = self.tmp_path / "output.img"
-        builder = Builder(self.mock_toolkit, output_path)
         
         # Mock project root to point to tmp_path
         with patch('usbfreedom.core.get_project_root', return_value=self.tmp_path):
+            builder = Builder(self.mock_toolkit, output_path)
             # Create dummy ISO and overlay
             (self.tmp_path / 'base_iso').mkdir()
             (self.tmp_path / 'base_iso' / 'test.iso').touch()
