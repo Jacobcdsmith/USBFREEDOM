@@ -18,7 +18,7 @@ echo "Extracting ISO..."
 7z x "$ISO" -o"$work/extract"
 
 echo "Applying overlay..."
-cp -r overlay/* "$work/extract/"
+cp -r core/overlay/* "$work/extract/"
 
 echo "Creating bootable image..."
 mkisofs -o "$USB_IMG" \
