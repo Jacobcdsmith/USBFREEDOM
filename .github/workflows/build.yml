@@ -62,6 +62,7 @@ jobs:
 
     - name: Download base ISO
       run: |
+        mkdir -p base_iso
         wget -O base_iso/${{ matrix.toolkit.base_iso }} ${{ matrix.toolkit.iso_url }}
 
     - name: Build USB image
