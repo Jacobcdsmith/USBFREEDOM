@@ -259,7 +259,8 @@ def list_usb_devices() -> List[DeviceInfo]:
         if result.returncode != 0:
             return devices
 
-        payload = json.loads(result.stdout or "{}")
+        payload_text = result.stdout if result.stdout else "{}"
+        payload = json.loads(payload_text)
         for dev in payload.get('blockdevices', []):
             removable = str(dev.get('rm', '0')) == '1'
             dev_type = dev.get('type', '')

@@ -83,13 +83,15 @@ def main():
             sys.exit(1)
 
     elif args.command == 'flash':
+        normalized_persistence_size = args.persistence_size if args.persistence_size is not None and args.persistence_size > 0 else -1
+
         # Confirm before flashing
         print(f"WARNING: All data on {args.device} will be overwritten!")
 
         if args.persistence:
             print(f"Persistence will be ENABLED")
-            if args.persistence_size is not None and args.persistence_size > 0:
-                print(f"Persistence size: {args.persistence_size} MB")
+            if normalized_persistence_size > 0:
+                print(f"Persistence size: {normalized_persistence_size} MB")
             else:
                 print(f"Persistence size: All remaining space")
 
@@ -100,13 +102,12 @@ def main():
 
         # Create flasher with persistence options
         persistence_enabled = args.persistence
-        persistence_size = args.persistence_size if args.persistence_size is not None and args.persistence_size > 0 else -1
 
         flasher = Flasher(
             Path(args.image),
             args.device,
             persistence_enabled=persistence_enabled,
-            persistence_size_mb=persistence_size
+            persistence_size_mb=normalized_persistence_size
         )
 
         try:
