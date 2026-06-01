@@ -88,7 +88,7 @@ def main():
 
         if args.persistence:
             print(f"Persistence will be ENABLED")
-            if args.persistence_size is not None:
+            if args.persistence_size is not None and args.persistence_size > 0:
                 print(f"Persistence size: {args.persistence_size} MB")
             else:
                 print(f"Persistence size: All remaining space")
@@ -100,7 +100,7 @@ def main():
 
         # Create flasher with persistence options
         persistence_enabled = args.persistence
-        persistence_size = args.persistence_size if args.persistence_size is not None else -1
+        persistence_size = args.persistence_size if args.persistence_size is not None and args.persistence_size > 0 else -1
 
         flasher = Flasher(
             Path(args.image),

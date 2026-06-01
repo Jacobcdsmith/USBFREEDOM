@@ -1,4 +1,5 @@
 import os
+import stat
 import subprocess
 import shutil
 import tempfile
@@ -200,9 +201,15 @@ class Flasher:
         if not self.image_path.exists():
             raise FileNotFoundError(f"Image file not found: {self.image_path}")
 
-        # Basic safety check for device path (very minimal)
+        # Safety checks for target device
         if not os.path.exists(self.device_path):
              raise FileNotFoundError(f"Target device not found: {self.device_path}")
+        try:
+            mode = os.stat(self.device_path).st_mode
+        except OSError as e:
+            raise FileNotFoundError(f"Unable to inspect target device {self.device_path}: {e}") from e
+        if not stat.S_ISBLK(mode):
+            raise ValueError(f"Target is not a block device: {self.device_path}")
 
         logger.warning(f"All data on {self.device_path} will be overwritten.")
         # In a real CLI we'd ask for confirmation here, but the class just does the work.
